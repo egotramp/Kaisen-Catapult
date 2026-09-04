@@ -1,1 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4f4f5" />
+  <title>Kaizen Catapult</title>
+  <style>
+    :root{
+      --bg:#f4f4f5;
+      --card:#ffffff;
+      --text:#18181b;
+      --muted:#71717a;
+      --border:#d4d4d8;
+      --accent:#2563eb;
+      --accent-soft:#dbeafe;
+      --good:#15803d;
+      --warn:#b45309;
+      --danger:#b91c1c;
+      --series2:#8b5cf6;
+      --series3:#ef4444;
+      --series4:#a16207;
+      --series5:#0f766e;
+    }
 
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{padding:16px}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    button:disabled{cursor:not-allowed;opacity:.5}
+
+    .app{max-width:980px;margin:0 auto;display:grid;gap:16px}
+    .header h1{margin:0 0 6px;font-size:clamp(1.7rem,6vw,2.7rem)}
+    .header p{margin:0;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:14px}
+    .panel,.card,.note{background:var(--card);border:1px solid var(--border);border-radius:18px}
+    .panel,.card{padding:14px}
+    .note{padding:14px}
+    .topline{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px}
+    .status{border:1px solid var(--border);border-radius:999px;padding:7px 11px;font-size:.85rem;white-space:nowrap}
+    .muted{color:var(--muted)}
+    .small{font-size:.9rem}
+    svg{width:100%;height:auto;display:block;border-radius:14px;background:#fafafa}
+    .result{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:14px;font-size:.95rem}
+    .control{margin-bottom:16px}
+    .control-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:7px}
+    input[type="range"]{width:100%;min-height:44px}
+    .primary,.secondary,.upgrade{min-height:46px;border-radius:12px;padding:10px 12px;border:1px solid var(--border);background:#fff;color:var(--text)}
+    .primary{width:100%;background:var(--accent-soft);border-color:#93c5fd;font-weight:700}
+    .primary:focus,.secondary:focus,.upgrade:focus,input:focus{outline:3px solid rgba(37,99,235,.2);outline-offset:2px}
+    .upgrades{display:grid;gap:9px}
+    .upgrade{text-align:left}
+    .upgrade strong{display:block;margin-bottom:3px}
+    .history-wrap{overflow-x:auto}
+    table{border-collapse:collapse;width:100%;min-width:600px}
+    th,td{text-align:left;padding:10px 8px;border-top:1px solid var(--border);font-size:.9rem}
+    thead th{border-top:0;color:var(--muted)}
+    .history-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+    .lesson strong{font-weight:800}
+
+    @media (max-width:760px){
+      body{padding:10px}
+      .grid{grid-template-columns:1fr}
+      .topline{flex-direction:column}
+      .status{white-space:normal}
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <h1>Kaizen Catapult</h1>
+      <p>Prueba, mide, aprende y mejora hasta alcanzar el objetivo.</p>
+    </header>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="topline">
+          <div>
+            <strong>Objetivo: acertar al blanco</strong>
+            <div class="small muted">
+              Iteración <span id="iteration">1</span> de 6 ·
+              Mejoras disponibles: <strong id="points">0</strong>
+            </div>
+          </div>
+          <div id="statusBadge" class="status">Preparado</div>
+        </div>
+
+        <svg id="field" viewBox="0 0 700 300" role="img" aria-label="Campo con catapulta y objetivo">
+          <rect x="0" y="0" width="700" height="300" rx="16" fill="#fafafa"></rect>
+          <line x1="25" y1="252" x2="675" y2="252" stroke="#d4d4d8" stroke-width="4"></line>
+
+          <g opacity="0.7" font-size="12" fill="#71717a">
+            <text x="75" y="275">0 m</text>
+            <text x="200" y="275">25 m</text>
+            <text x="325" y="275">50 m</text>
+            <text x="450" y="275">75 m</text>
+            <text x="570" y="275">100 m</text>
+            <line x1="80" y1="247" x2="80" y2="258" stroke="#d4d4d8"></line>
+            <line x1="205" y1="247" x2="205" y2="258" stroke="#d4d4d8"></line>
+            <line x1="330" y1="247" x2="330" y2="258" stroke="#d4d4d8"></line>
+            <line x1="455" y1="247" x2="455" y2="258" stroke="#d4d4d8"></line>
+            <line x1="580" y1="247" x2="580" y2="258" stroke="#d4d4d8"></line>
+          </g>
+
+          <g>
+            <polygon points="55,250 120,250 105,220 70,220" fill="#a16207"></polygon>
+            <circle cx="72" cy="253" r="13" fill="#18181b"></circle>
+            <circle cx="105" cy="253" r="13" fill="#18181b"></circle>
+            <line x1="88" y1="225" x2="65" y2="177" stroke="#8b5cf6" stroke-width="9" stroke-linecap="round"></line>
+            <circle cx="62" cy="170" r="12" fill="#ef4444"></circle>
+          </g>
+
+          <g>
+            <line x1="580" y1="252" x2="580" y2="120" stroke="#18181b" stroke-width="5"></line>
+            <circle cx="580" cy="143" r="35" fill="#ef4444"></circle>
+            <circle cx="580" cy="143" r="22" fill="#fafafa"></circle>
+            <circle cx="580" cy="143" r="10" fill="#ef4444"></circle>
+            <text x="580" y="100" text-anchor="middle" font-size="14" fill="#18181b" font-weight="700">100 m</text>
+          </g>
+
+          <path id="trajectory" d="" fill="none" stroke="#0f766e" stroke-width="3" stroke-dasharray="7 6" opacity="0"></path>
+          <circle id="projectile" cx="62" cy="170" r="10" fill="#0f766e"></circle>
+
+          <g id="impactGroup" opacity="0">
+            <line x1="0" y1="239" x2="0" y2="260" stroke="#0f766e" stroke-width="4"></line>
+            <text id="impactText" x="0" y="225" text-anchor="middle" font-size="14" fill="#18181b" font-weight="700"></text>
+          </g>
+        </svg>
+
+        <div id="result" class="result" aria-live="polite">
+          Haz un primer lanzamiento. Después podrás usar los datos para mejorar el proceso.
+        </div>
+      </section>
+
+      <aside>
+        <section class="card">
+          <h2 style="font-size:1rem;margin:0 0 14px">Configurar lanzamiento</h2>
+
+          <div class="control">
+            <div class="control-head">
+              <span>Ángulo</span>
+              <strong><span id="angleValue">45</span>°</strong>
+            </div>
+            <input id="angle" type="range" min="20" max="70" value="45" step="1">
+          </div>
+
+          <div class="control">
+            <div class="control-head">
+              <span>Potencia</span>
+              <strong><span id="powerValue">60</span>%</strong>
+            </div>
+            <input id="power" type="range" min="20" max="70" value="60" step="1">
+          </div>
+
+          <button id="launch" class="primary" type="button">🚀 Lanzar</button>
+        </section>
+
+        <section class="card" style="margin-top:14px">
+          <div class="history-head">
+            <strong>Mejorar la catapulta</strong>
+            <span class="small muted">1 punto c/u</span>
+          </div>
+
+          <p class="small muted" style="margin-top:0">
+            Cada prueba genera aprendizaje. Elige la mejora que creas que elimina la causa del problema.
+          </p>
+
+          <div class="upgrades">
+            <button type="button" data-upgrade="power" class="upgrade">
+              <strong>⚙️ Resorte</strong>
+              <span class="small">Aumenta la potencia máxima +15%</span>
+            </button>
+
+            <button type="button" data-upgrade="aim" class="upgrade">
+              <strong>🎯 Mira</strong>
+              <span class="small">Reduce 50% el error de ángulo</span>
+            </button>
+
+            <button type="button" data-upgrade="stability" class="upgrade">
+              <strong>🧱 Base estable</strong>
+              <span class="small">Reduce 50% la variación entre tiros</span>
+            </button>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <section class="card">
+      <div class="history-head">
+        <div>
+          <strong>Registro de experimentos</strong>
+          <span class="small muted">— medir antes de decidir</span>
+        </div>
+        <button id="reset" class="secondary" type="button">Reiniciar</button>
+      </div>
+
+      <div class="history-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Ángulo</th>
+              <th>Potencia</th>
+              <th>Distancia</th>
+              <th>Error</th>
+              <th>Resultado</th>
+            </tr>
+          </thead>
+          <tbody id="history">
+            <tr><td colspan="6" class="muted">Todavía no hay datos.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="note lesson">
+      <strong>Idea del taller:</strong>
+      no premiar “adivinar” a la primera. Después de cada tiro, el equipo debe explicar qué observó,
+      qué variable cambiará y por qué. El ciclo es <strong>probar → medir → aprender → mejorar</strong>.
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const root = document;
+      const $ = s => root.querySelector(s);
+
+      const angle = $('#angle');
+      const power = $('#power');
+      const angleValue = $('#angleValue');
+      const powerValue = $('#powerValue');
+      const launch = $('#launch');
+      const result = $('#result');
+      const history = $('#history');
+      const pointsEl = $('#points');
+      const iterationEl = $('#iteration');
+      const projectile = $('#projectile');
+      const trajectory = $('#trajectory');
+      const impactGroup = $('#impactGroup');
+      const impactText = $('#impactText');
+      const upgrades = [...document.querySelectorAll('.upgrade')];
+
+      let attempts = 0;
+      let points = 0;
+      let records = [];
+      let busy = false;
+      let state = { power:false, aim:false, stability:false };
+
+      const targetDistance = 100;
+
+      function updateLabels(){
+        angleValue.textContent = angle.value;
+        powerValue.textContent = power.value;
+      }
+
+      angle.addEventListener('input', updateLabels);
+      power.addEventListener('input', updateLabels);
+
+      function updateUpgradeButtons(){
+        upgrades.forEach(button => {
+          const type = button.dataset.upgrade;
+          const bought = state[type];
+
+          button.disabled = busy || bought || points < 1 || attempts === 0;
+
+          if (bought && !button.dataset.done) {
+            const strong = button.querySelector('strong');
+            strong.textContent = strong.textContent + ' ✓';
+            button.dataset.done = '1';
+          }
+        });
+
+        pointsEl.textContent = points;
+      }
+
+      function buyUpgrade(type){
+        if (points < 1 || state[type] || busy) return;
+
+        state[type] = true;
+        points--;
+
+        if (type === 'power') {
+          power.max = '85';
+        }
+
+        result.innerHTML =
+          '<strong>Mejora aplicada.</strong> Ahora haz otra prueba y compara el resultado con los datos anteriores.';
+
+        updateUpgradeButtons();
+      }
+
+      upgrades.forEach(button => {
+        button.addEventListener('click', () => buyUpgrade(button.dataset.upgrade));
+      });
+
+      function calculate(){
+        const a = Number(angle.value);
+        const p = Number(power.value);
+
+        const angleNoise = (Math.random() * 2 - 1) * (state.aim ? 1 : 3);
+        const variation = (Math.random() * 2 - 1) * (state.stability ? 1.5 : 4);
+        const actualAngle = (a + angleNoise) * Math.PI / 180;
+
+        let distance = p * Math.sin(2 * actualAngle) * 1.43 + variation;
+        distance = Math.max(0, Math.min(120, distance));
+
+        return { a, p, distance };
+      }
+
+      function fieldX(distance){
+        return 80 + distance * 5;
+      }
+
+      function makePath(distance, a){
+        const x0 = 62;
+        const y0 = 170;
+        const x1 = Math.min(660, fieldX(distance));
+        const span = x1 - x0;
+        const height = Math.max(45, Math.min(150, 55 + (a - 20) * 1.7));
+
+        return `M ${x0} ${y0} Q ${x0 + span/2} ${Math.max(25, y0 - height)} ${x1} 247`;
+      }
+
+      function renderHistory(){
+        history.innerHTML = '';
+
+        records.forEach(r => {
+          const tr = document.createElement('tr');
+
+          tr.innerHTML = `
+            <td>${r.n}</td>
+            <td>${r.a}°</td>
+            <td>${r.p}%</td>
+            <td><strong>${r.distance.toFixed(1)} m</strong></td>
+            <td>${Math.abs(r.distance - targetDistance).toFixed(1)} m</td>
+            <td>${r.hit ? '🎯 Acierto' : (r.distance < targetDistance ? '⬅️ Corto' : '➡️ Largo')}</td>
+          `;
+
+          history.appendChild(tr);
+        });
+      }
+
+      function finishShot(r){
+        busy = false;
+        attempts++;
+        points++;
+
+        const error = Math.abs(r.distance - targetDistance);
+        const hit = error <= 5;
+
+        records.push({
+          n: attempts,
+          a: r.a,
+          p: r.p,
+          distance: r.distance,
+          hit
+        });
+
+        renderHistory();
+        iterationEl.textContent = Math.min(attempts + 1, 6);
+
+        const direction = r.distance < targetDistance ? 'quedó corto' : 'se pasó';
+
+        if (hit){
+          result.innerHTML =
+            `<strong>🎯 ¡Objetivo alcanzado!</strong> Distancia: ${r.distance.toFixed(1)} m.
+             Error: ${error.toFixed(1)} m.
+             Ahora la pregunta es: <em>¿qué condición deberíamos estandarizar para repetirlo?</em>`;
+          $('#statusBadge').textContent = 'Objetivo alcanzado';
+        } else if (attempts >= 6){
+          result.innerHTML =
+            `<strong>Fin de las 6 iteraciones.</strong> El tiro llegó a ${r.distance.toFixed(1)} m y ${direction}.
+             Usa la tabla para discutir qué cambios ayudaron y cuáles no.`;
+          $('#statusBadge').textContent = 'Revisar aprendizaje';
+        } else {
+          result.innerHTML =
+            `El tiro llegó a <strong>${r.distance.toFixed(1)} m</strong>: ${direction}
+             por <strong>${error.toFixed(1)} m</strong>.
+             Ganaste 1 punto de mejora. Decide: ¿ajustar el proceso o modificar la catapulta?`;
+          $('#statusBadge').textContent = 'Analizar y mejorar';
+        }
+
+        launch.disabled = attempts >= 6;
+        updateUpgradeButtons();
+      }
+
+      launch.addEventListener('click', () => {
+        if (busy || attempts >= 6) return;
+
+        busy = true;
+        launch.disabled = true;
+        updateUpgradeButtons();
+        $('#statusBadge').textContent = 'Probando…';
+
+        const r = calculate();
+        const path = makePath(r.distance, r.a);
+
+        trajectory.setAttribute('d', path);
+        trajectory.setAttribute('opacity', '0.85');
+
+        const x = fieldX(r.distance);
+
+        impactGroup.setAttribute('transform', `translate(${Math.min(660, x)} 0)`);
+        impactGroup.setAttribute('opacity', '0');
+        impactText.textContent = `${r.distance.toFixed(1)} m`;
+
+        const reduced = window.matchMedia &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (reduced){
+          projectile.setAttribute('cx', Math.min(660, x));
+          projectile.setAttribute('cy', '247');
+          impactGroup.setAttribute('opacity', '1');
+          finishShot(r);
+          return;
+        }
+
+        const pathNode = trajectory;
+        const len = pathNode.getTotalLength();
+        let start = null;
+
+        function frame(t){
+          if (!start) start = t;
+
+          const q = Math.min(1, (t - start) / 700);
+          const pt = pathNode.getPointAtLength(len * q);
+
+          projectile.setAttribute('cx', pt.x);
+          projectile.setAttribute('cy', pt.y);
+
+          if (q < 1){
+            requestAnimationFrame(frame);
+          } else {
+            impactGroup.setAttribute('opacity', '1');
+            finishShot(r);
+          }
+        }
+
+        requestAnimationFrame(frame);
+      });
+
+      $('#reset').addEventListener('click', () => {
+        attempts = 0;
+        points = 0;
+        records = [];
+        busy = false;
+        state = { power:false, aim:false, stability:false };
+
+        angle.value = '45';
+        power.value = '60';
+        power.max = '70';
+
+        updateLabels();
+
+        history.innerHTML =
+          '<tr><td colspan="6" class="muted">Todavía no hay datos.</td></tr>';
+
+        iterationEl.textContent = '1';
+        result.textContent =
+          'Haz un primer lanzamiento. Después podrás usar los datos para mejorar el proceso.';
+        $('#statusBadge').textContent = 'Preparado';
+
+        launch.disabled = false;
+        trajectory.setAttribute('opacity', '0');
+        impactGroup.setAttribute('opacity', '0');
+        projectile.setAttribute('cx', '62');
+        projectile.setAttribute('cy', '170');
+
+        upgrades.forEach(button => {
+          button.dataset.done = '';
+          const strong = button.querySelector('strong');
+          strong.textContent = strong.textContent.replace(' ✓', '');
+        });
+
+        updateUpgradeButtons();
+      });
+
+      updateLabels();
+      updateUpgradeButtons();
+    })();
+  </script>
+</body>
+</html>
